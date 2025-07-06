@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body data-theme="light">
+    <!-- Login Page -->
+    <div id="loginPage" class="page active">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <h1>💰</h1>
+                    <h2>Expense Tracker</h2>
+                    <p>Track your finances with ease</p>
+                </div>
+                
+                <div id="loginForm">
+                    <form id="loginFormElement">
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" class="form-control" required placeholder="Enter your email">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <div class="input-container">
+                                <input type="password" id="password" class="form-control" required placeholder="Enter your password">
+                                <button type="button" class="password-toggle" onclick="togglePassword()">👁️</button>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Sign In</button>
+                        <div class="error-message" id="loginError"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="page">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">Expense Tracker</div>
+                <ul class="nav-menu">
+                    <li class="nav-item active" onclick="showPage('dashboard')">Dashboard</li>
+                    <li class="nav-item" onclick="showPage('addTransaction')">Add Transaction</li>
+                    <li class="nav-item" onclick="showPage('budgets')">Budgets</li>
+                    <li class="nav-item" onclick="showPage('goals')">Goals</li>
+                    <li class="nav-item" onclick="showPage('bills')">Bills</li>
+                    <li class="nav-item" onclick="showPage('history')">History</li>
+                    <li class="nav-item" onclick="showPage('reports')">Reports</li>
+                    <li class="nav-item" onclick="showPage('settings')">Settings</li>
+                </ul>
+                <div class="nav-actions">
+                    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+                    <button class="btn" onclick="logout()" style="background: var(--danger-color); color: white;">Signout</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="container page active">
+            <h2 style="margin-bottom: 30px;">Dashboard</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value income" id="totalIncome">$0.00</div>
+                    <div class="stat-label">Total Income</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value expense" id="totalExpense">$0.00</div>
+                    <div class="stat-label">Total Expenses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value balance" id="totalBalance">$0.00</div>
+                    <div class="stat-label">Current Balance</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="savingsProgress">$0.00</div>
+                    <div class="stat-label">Savings Progress</div>
+                </div>
+            </div>
+
+            <div class="carousel-container">
+                <div class="carousel">
+                    <div class="carousel-slide active">
+                        <div class="slide-content">
+                            <h3>💡 Smart Budgeting</h3>
+                            <p>Set budgets and track your spending to achieve your financial goals</p>
+                        </div>
+                    </div>
+                    <div class="carousel-slide">
+                        <div class="slide-content">
+                            <h3>📊 Detailed Reports</h3>
+                            <p>Generate comprehensive reports to understand your spending patterns</p>
+                        </div>
+                    </div>
+                    <div class="carousel-slide">
+                        <div class="slide-content">
+                            <h3>🔒 Secure & Private</h3>
+                            <p>Your financial data is protected with bank-level security</p>
+                        </div>
+                    </div>
+                    <div class="carousel-nav">
+                        <div class="carousel-dot active" onclick="showSlide(0)"></div>
+                        <div class="carousel-dot" onclick="showSlide(1)"></div>
+                        <div class="carousel-dot" onclick="showSlide(2)"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="quick-action-btn" onclick="showPage('addTransaction')">
+                    <span class="action-icon">➕</span>
+                    <span>Add Transaction</span>
+                </button>
+                <button class="quick-action-btn" onclick="openVoiceInput()">
+                    <span class="action-icon">🎤</span>
+                    <span>Voice Input</span>
+                </button>
+                <button class="quick-action-btn" onclick="openReceiptScanner()">
+                    <span class="action-icon">📷</span>
+                    <span>Scan Receipt</span>
+                </button>
+                <button class="quick-action-btn" onclick="showPage('budgets')">
+                    <span class="action-icon">📊</span>
+                    <span>View Budgets</span>
+                </button>
+            </div>
+            
+            <!-- Alerts Section -->
+            <div id="alertsContainer" class="alerts-container hidden">
+                <h3 style="margin-bottom: 15px;">⚠️ Alerts</h3>
+                <div id="budgetAlerts"></div>
+                <div id="billReminders"></div>
+            </div>
+            
+            <div style="background: var(--surface-color); padding: 25px; border-radius: 15px; box-shadow: var(--shadow);">
+                <h3 style="margin-bottom: 20px;">Recent Transactions</h3>
+                <div id="recentTransactions">
+                    <p style="text-align: center; color: var(--text-secondary);">No transactions yet. Add your first transaction!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Transaction Page -->
+        <div id="addTransaction" class="container page">
+            <h2 style="margin-bottom: 30px;">Add Transaction</h2>
+            
+            <div class="form-card">
+                <form id="transactionForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="transactionType">Transaction Type</label>
+                            <select id="transactionType" class="form-control" required>
+                                <option value="">Select Type</option>
+                                <option value="income">Income</option>
+                                <option value="expense">Expense</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="amount">Amount</label>
+                            <input type="number" id="amount" class="form-control" step="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                            <select id="category" class="form-control" required>
+                                <option value="">Select Category</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="date">Date</label>
+                            <input type="date" id="date" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <input type="text" id="description" class="form-control" placeholder="Enter description (optional)">
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentMethod">Payment Method</label>
+                        <select id="paymentMethod" class="form-control">
+                            <option value="cash">Cash</option>
+                            <option value="credit">Credit Card</option>
+                            <option value="debit">Debit Card</option>
+                            <option value="bank">Bank Transfer</option>
+                            <option value="digital">Digital Wallet</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="isRecurring"> Recurring Transaction
+                        </label>
+                    </div>
+
+                    <div id="recurringOptions" class="form-group hidden">
+                        <label for="recurringFrequency">Frequency</label>
+                        <select id="recurringFrequency" class="form-control">
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Add Transaction</button>
+                        <button type="button" class="btn btn-secondary" onclick="openVoiceInput()">🎤 Voice Input</button>
+                        <button type="button" class="btn btn-info" onclick="openReceiptScanner()">📷 Scan Receipt</button>
+                    </div>
+                    <div class="error-message" id="transactionError"></div>
+                </form>
+            </div>
+            
+            <!-- Voice Input Modal -->
+            <div id="voiceInputModal" class="modal hidden">
+                <div class="modal-content">
+                    <span class="close-modal" onclick="closeVoiceInput()">&times;</span>
+                    <h3>🎤 Voice Input</h3>
+                    <p>Speak your transaction details like: "I spent $25 on dinner yesterday"</p>
+                    <div id="voiceInputStatus" class="voice-status">Click the microphone to start</div>
+                    <button id="voiceInputButton" class="btn btn-primary voice-btn" onclick="startVoiceRecognition()">
+                        <span class="voice-icon">🎤</span> Start Recording
+                    </button>
+                    <div id="voiceInputPreview" class="voice-preview hidden"></div>
+                    <button id="confirmVoiceInput" class="btn btn-success hidden" onclick="confirmVoiceInput()">Confirm Transaction</button>
+                </div>
+            </div>
+            
+            <!-- Receipt Scanner Modal -->
+            <div id="receiptScannerModal" class="modal hidden">
+                <div class="modal-content">
+                    <span class="close-modal" onclick="closeReceiptScanner()">&times;</span>
+                    <h3>📷 Scan Receipt</h3>
+                    <div id="scannerContainer">
+                        <video id="scannerVideo" class="hidden" autoplay playsinline></video>
+                        <canvas id="scannerCanvas" class="hidden"></canvas>
+                        <div id="scannerPlaceholder" class="scanner-placeholder">
+                            <p>📷 Camera access would be required for receipt scanning</p>
+                            <p>Demo: Upload a receipt image to simulate scanning</p>
+                            <input type="file" id="receiptFile" accept="image/*" onchange="simulateReceiptScan(event)">
+                        </div>
+                    </div>
+                    <div id="scannedResult" class="scanned-result hidden">
+                        <h4>Scanned Receipt Data:</h4>
+                        <div id="scannedData"></div>
+                        <button class="btn btn-success" onclick="confirmScannedTransaction()">Add Transaction</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budgets Page -->
+        <div id="budgets" class="container page">
+            <h2 style="margin-bottom: 30px;">Budget Management</h2>
+            
+            <div class="form-card">
+                <h3>Create New Budget</h3>
+                <form id="budgetForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="budgetCategory">Category</label>
+                            <select id="budgetCategory" class="form-control" required>
+                                <option value="">Select Category</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="budgetAmount">Budget Amount</label>
+                            <input type="number" id="budgetAmount" class="form-control" step="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="budgetPeriod">Period</label>
+                            <select id="budgetPeriod" class="form-control" required>
+                                <option value="monthly">Monthly</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="yearly">Yearly</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="budgetStartDate">Start Date</label>
+                            <input type="date" id="budgetStartDate" class="form-control" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Budget</button>
+                    <div class="error-message" id="budgetError"></div>
+                </form>
+            </div>
+
+            <div id="budgetsList" class="budgets-list">
+                <h3>Your Budgets</h3>
+                <div id="budgetsContainer"></div>
+            </div>
+        </div>
+
+        <!-- Goals Page -->
+        <div id="goals" class="container page">
+            <h2 style="margin-bottom: 30px;">Financial Goals</h2>
+            
+            <div class="form-card">
+                <h3>Create New Goal</h3>
+                <form id="goalForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="goalName">Goal Name</label>
+                            <input type="text" id="goalName" class="form-control" required placeholder="e.g., Emergency Fund">
+                        </div>
+                        <div class="form-group">
+                            <label for="goalTarget">Target Amount</label>
+                            <input type="number" id="goalTarget" class="form-control" step="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="goalCurrent">Current Amount</label>
+                            <input type="number" id="goalCurrent" class="form-control" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label for="goalDeadline">Target Date</label>
+                            <input type="date" id="goalDeadline" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="goalDescription">Description</label>
+                        <textarea id="goalDescription" class="form-control" rows="3" placeholder="Describe your goal..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Goal</button>
+                    <div class="error-message" id="goalError"></div>
+                </form>
+            </div>
+
+            <div id="goalsList" class="goals-list">
+                <h3>Your Goals</h3>
+                <div id="goalsContainer"></div>
+            </div>
+        </div>
+
+        <!-- Bills Page -->
+        <div id="bills" class="container page">
+            <h2 style="margin-bottom: 30px;">Bill Management</h2>
+            
+            <div class="form-card">
+                <h3>Add New Bill</h3>
+                <form id="billForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="billName">Bill Name</label>
+                            <input type="text" id="billName" class="form-control" required placeholder="e.g., Electricity Bill">
+                        </div>
+                        <div class="form-group">
+                            <label for="billAmount">Amount</label>
+                            <input type="number" id="billAmount" class="form-control" step="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="billCategory">Category</label>
+                            <select id="billCategory" class="form-control" required>
+                                <option value="">Select Category</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="billDueDate">Due Date</label>
+                            <input type="date" id="billDueDate" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="billRecurring">Recurring</label>
+                        <select id="billRecurring" class="form-control">
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="yearly">Yearly</option>
+                            <option value="one-time">One Time</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Bill</button>
+                    <div class="error-message" id="billError"></div>
+                </form>
+            </div>
+
+            <div id="billsList" class="bills-list">
+                <h3>Your Bills</h3>
+                <div id="billsContainer"></div>
+            </div>
+        </div>
+
+        <!-- History Page -->
+        <div id="history" class="container page">
+            <h2 style="margin-bottom: 30px;">Transaction History</h2>
+            
+            <div class="filters-card">
+                <h3>Filters</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="filterType">Type</label>
+                        <select id="filterType" class="form-control" onchange="filterTransactions()">
+                            <option value="">All Types</option>
+                            <option value="income">Income</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filterCategory">Category</label>
+                        <select id="filterCategory" class="form-control" onchange="filterTransactions()">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="filterDateFrom">From Date</label>
+                        <input type="date" id="filterDateFrom" class="form-control" onchange="filterTransactions()">
+                    </div>
+                    <div class="form-group">
+                        <label for="filterDateTo">To Date</label>
+                        <input type="date" id="filterDateTo" class="form-control" onchange="filterTransactions()">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
+                    <button class="btn btn-success" onclick="exportTransactions()">Export CSV</button>
+                </div>
+            </div>
+
+            <div id="transactionsList" class="transactions-list">
+                <div id="transactionsContainer"></div>
+            </div>
+        </div>
+
+        <!-- Reports Page -->
+        <div id="reports" class="container page">
+            <h2 style="margin-bottom: 30px;">Financial Reports</h2>
+            
+            <div class="report-controls">
+                <div class="form-group">
+                    <label for="reportPeriod">Report Period</label>
+                    <select id="reportPeriod" class="form-control" onchange="generateReports()">
+                        <option value="month">This Month</option>
+                        <option value="quarter">This Quarter</option>
+                        <option value="year">This Year</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+                <div class="form-group hidden" id="customDateRange">
+                    <label for="reportStartDate">Start Date</label>
+                    <input type="date" id="reportStartDate" class="form-control" onchange="generateReports()">
+                    <label for="reportEndDate">End Date</label>
+                    <input type="date" id="reportEndDate" class="form-control" onchange="generateReports()">
+                </div>
+                <button class="btn btn-primary" onclick="generateReports()">Generate Report</button>
+                <button class="btn btn-success" onclick="exportReport()">Export Report</button>
+            </div>
+
+            <div id="reportsContainer" class="reports-container">
+                <div class="chart-container">
+                    <h3>Expense Categories</h3>
+                    <canvas id="expenseChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Income vs Expenses</h3>
+                    <canvas id="incomeExpenseChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Monthly Trend</h3>
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="settings" class="container page">
+            <h2 style="margin-bottom: 30px;">Settings</h2>
+            
+            <div class="settings-card">
+                <h3>Profile Settings</h3>
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label for="profileName">Full Name</label>
+                        <input type="text" id="profileName" class="form-control" placeholder="Enter your name">
+                    </div>
+                    <div class="form-group">
+                        <label for="profileEmail">Email</label>
+                        <input type="email" id="profileEmail" class="form-control" placeholder="Enter your email">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
+                </form>
+            </div>
+
+            <div class="settings-card">
+                <h3>Appearance</h3>
+                <div class="setting-item">
+                    <div class="setting-content">
+                        <h4>Dark Mode</h4>
+                        <p>Toggle between light and dark theme</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="currency">Currency</label>
+                    <select id="currency" class="form-control" onchange="updateCurrency()">
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="GBP">GBP (£)</option>
+                        <option value="CAD">CAD ($)</option>
+                        <option value="AUD">AUD ($)</option>
+                        <option value="INR">INR (₹)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h3>Notifications</h3>
+                <div class="setting-item">
+                    <div class="setting-content">
+                        <h4>Budget Alerts</h4>
+                        <p>Get notified when approaching budget limits</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="budgetAlerts" onchange="updateNotifications()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-content">
+                        <h4>Bill Reminders</h4>
+                        <p>Receive reminders for upcoming bills</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="billReminders" onchange="updateNotifications()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h3>Data Management</h3>
+                <button class="btn btn-info" onclick="exportData()">Export All Data</button>
+                <button class="btn btn-warning" onclick="importData()">Import Data</button>
+                <button class="btn btn-danger" onclick="clearAllData()">Clear All Data</button>
+                <input type="file" id="importFile" class="hidden" accept=".json" onchange="handleImport(event)">
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
